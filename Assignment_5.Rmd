@@ -51,7 +51,7 @@ The graph shows that AM WEST has significantly more flights to Phoenix compared 
 ```{r flight_status_airline_destination}
 
 airlines_long <- airlines_long %>%
-  group_by(Destination) %>%
+  group_by(Destination, Airline) %>%
   mutate(percentage = ifelse(Status == "delayed", (Result / sum(Result)) * 100, NA))
 
 airlines_long <- airlines_long %>%
