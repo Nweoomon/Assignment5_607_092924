@@ -1,0 +1,136 @@
+---
+title: "Assignment_5"
+author: "Nwe Oo Mon (Nina)"
+date: "2024-09-28"
+output: html_document
+---
+## Loading the libraries and the data
+```{r setup}
+library(tidyverse)
+
+file_path <- "C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\airlines.csv"
+airlines_data <- read_csv(file_path)
+
+head (airlines_data)
+```
+
+## from wide data form to long form
+```{r long_data}
+airlines_long <- airlines_data %>%
+  pivot_longer(cols = c("Los Angeles", "Phoenix", "San Diego", "San Francisco", "Seattle"),
+               names_to = "Destination",
+               values_to = "Result")
+
+head (airlines_long)
+```
+
+## Total Flights by Airlines
+```{r total_flights}
+# Summarize total flights for each destination by airline
+destination_summary <- airlines_long %>%
+  group_by(Destination, Airline) %>%
+  summarise(total_flights = sum(Result))
+
+print(destination_summary)
+
+# Grouped bar chart to show total flights for each destination by airline
+ggplot(data = destination_summary, aes(x = Destination, y = total_flights, fill = Airline)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  theme_minimal() +
+  labs(title = "Total Flights to Each Destination by Airline",
+       x = "Destination",
+       y = "Total Number of Flights",
+       fill = "Airline") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+scale_fill_manual(values = c("ALASKA" = "#0077C8", "AM WEST" = "#C8102E"))
+```
+
+The graph shows that AM WEST has significantly more flights to Phoenix compared to ALASKA and also has a higher number of flights to Los Angeles and San Diego. On the other hand, ALASKA has the most flights to Seattle, and relatively higher flights to San Francisco.
+
+# Flight Delays
+```{r flight_status_airline_destination}
+
+airlines_long <- airlines_long %>%
+  group_by(Destination) %>%
+  mutate(percentage = ifelse(Status == "delayed", (Result / sum(Result)) * 100, NA))
+
+airlines_long <- airlines_long %>%
+  group_by(Destination, Airline) %>%
+  mutate(label_y = ifelse(Status == "delayed", 
+                          lag(cumsum(Result), default = 0) + (Result / 2), 
+                          NA))
+
+print(airlines_long)
+
+ggplot(data = airlines_long, aes(x = Destination, y = Result, fill = Status)) +
+  geom_bar(stat = "identity", width = 0.7) + 
+  geom_text(data = airlines_long %>% filter(Status == "delayed"),
+            aes(label = paste0(round(percentage, 1), "%"), y = label_y),
+            color = "black", size = 4) +
+  facet_grid(~ Airline) +
+  theme_minimal() +
+  labs(title = "Comparison of Delays and On-Time Flights by Airline and Destination",
+       x = "Destination",
+       y = "Total Flights",
+       fill = "Status") +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1, vjust = 1))  
+```
+
+Alaska Airline experiences the highest percentage of delays for flights to Seattle at 12.7%, followed by San Francisco at 9.7%. Delays for Los Angeles and San Diego are relatively low, while Phoenix has almost no delays.
+AM West Airline shows the most significant percentage of delays for flights to San Francisco (12.2%), followed by San Diego (9.6%) and Los Angeles (8.5%). Seattle has very low delay percentages.
+
+```{r flight_status_airline}
+# Summarize flight status by airline
+status_summary <- airlines_long %>%
+  group_by(Status, Airline) %>%
+  summarise(total_flights = sum(Result))
+
+status_summary <- status_summary %>%
+  group_by(Airline) %>%
+  mutate(percentage = ifelse(Status == "delayed", (total_flights / sum(total_flights)) * 100, NA))
+
+print(status_summary)
+
+# Create a stacked bar chart_airlines
+ggplot(data = status_summary, aes(x = Airline, y = total_flights, fill = Status)) +
+  geom_bar(stat = "identity", width = 0.5) +
+  geom_text(data = status_summary %>% filter(Status == "delayed"),
+            aes(label = paste0(round(percentage, 1), "%")),
+            position = position_stack(vjust = 9.5),
+            color = "black", size = 4) +
+  theme_minimal() +
+  labs(title = "Comparison of Delays and On-Time Flights for Airlines",
+       x = "Airline",
+       y = "Number of Flights",
+       fill = "Flight Status") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+ALASKA Airline has 501 delays and 3274 on time flights, and delays accounted for 13.3% of their total flights.
+AM WEST Airline has 787 delayed flights and 6438 on time flights, and delayed flights represented 10.9% of their total flights.
+
+```{r flight_status_destination}
+# Summarize flights for each destination by flight status
+destination_status <- airlines_long %>%
+  group_by(Destination, Status) %>%
+  summarise(total_flights = sum(Result))
+
+destination_status <- destination_status %>%
+  group_by(Destination) %>%
+  mutate(percentage = ifelse(Status == "delayed", (total_flights / sum(total_flights)) * 100, NA))
+
+print(destination_status)
+
+# Create a stacked bar chart_destination
+ggplot(data = destination_status, aes(x = Destination, y = total_flights, fill = Status)) +
+  geom_bar(stat = "identity", width = 0.5) +
+  theme_minimal() +
+  labs(title = "Comparison of Delays and On-Time Flights by destination",
+       x = "Destination",
+       y = "Number of Flights",
+       fill = "Flight Status") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+San Francisco has the highest percentage of delayed flights at 21.9%, followed by Seattle at 15.2%.
+Phoenix has the lowest percentage of delayed flights, with only 7.8% of flights being delayed.
