@@ -5,16 +5,20 @@ date: "2024-09-28"
 output: html_document
 ---
 ## Loading the libraries and the data
+The data can be downloaded from
+ [github](https://github.com/Nweoomon/Assignment5_607_092924/blob/main/airlines.csv).
 ```{r setup}
 library(tidyverse)
+library(knitr)
 
+# Read the CSV file, specifying missing values
 file_path <- "C:\\ProgramData\\MySQL\\MySQL Server 8.0\\Uploads\\airlines.csv"
-airlines_data <- read_csv(file_path)
+airlines_data <- read_csv(file_path, na = c("-1"))
 
-head (airlines_data)
+kable(airlines_data, caption = "Complete Airlines Dataset")
 ```
 
-## from wide data form to long form
+## From wide data form to long form
 ```{r long_data}
 airlines_long <- airlines_data %>%
   pivot_longer(cols = c("Los Angeles", "Phoenix", "San Diego", "San Francisco", "Seattle"),
@@ -76,8 +80,8 @@ ggplot(data = airlines_long, aes(x = Destination, y = Result, fill = Status)) +
   theme(axis.text.x = element_text(angle = 60, hjust = 1, vjust = 1))  
 ```
 
-Alaska Airline experiences the highest percentage of delays for flights to Seattle at 12.7%, followed by San Francisco at 9.7%. Delays for Los Angeles and San Diego are relatively low, while Phoenix has almost no delays.
-AM West Airline shows the most significant percentage of delays for flights to San Francisco (12.2%), followed by San Diego (9.6%) and Los Angeles (8.5%). Seattle has very low delay percentages.
+Alaska Airline experiences the highest percentage of delays for flights to San Francisco at 16.9%, followed by Seattle at 14.2%. Delays for Phoenix and San Diego are relatively low.
+AM West Airline shows the most significant percentage of delays for flights to San Francisco (28.7%), followed by Seattle (23.3%) and Los Angeles (8.5%). Phoenix has low delay percentages.
 
 ```{r flight_status_airline}
 # Summarize flight status by airline
@@ -112,7 +116,7 @@ AM WEST Airline has 787 delayed flights and 6438 on time flights, and delayed fl
 ```{r flight_status_destination}
 # Summarize flights for each destination by flight status
 destination_status <- airlines_long %>%
-  group_by(Destination, Status) %>%
+  group_by(Status, Destination) %>%
   summarise(total_flights = sum(Result))
 
 destination_status <- destination_status %>%
