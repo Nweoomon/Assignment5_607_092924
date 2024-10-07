@@ -7,6 +7,7 @@ output: html_document
 ## Loading the libraries and the data
 The data can be downloaded from
  [github](https://github.com/Nweoomon/Assignment5_607_092924/blob/main/airlines.csv).
+ 
 ```{r setup}
 library(tidyverse)
 library(knitr)
@@ -30,12 +31,20 @@ head (airlines_long)
 
 ## Total Flights by Airlines
 ```{r total_flights}
+
+# Summarize total flights by airline
+Airline_summary <- airlines_long %>%
+  group_by(Airline) %>%
+  summarise(total_flights = sum(Result))
+
+kable(Airline_summary, caption = "Total Flights by Airline")
+
 # Summarize total flights for each destination by airline
 destination_summary <- airlines_long %>%
   group_by(Destination, Airline) %>%
   summarise(total_flights = sum(Result))
 
-print(destination_summary)
+kable(destination_summary, caption = "Total Flights by Destination")
 
 # Grouped bar chart to show total flights for each destination by airline
 ggplot(data = destination_summary, aes(x = Destination, y = total_flights, fill = Airline)) +
@@ -138,3 +147,7 @@ ggplot(data = destination_status, aes(x = Destination, y = total_flights, fill =
 
 San Francisco has the highest percentage of delayed flights at 21.9%, followed by Seattle at 15.2%.
 Phoenix has the lowest percentage of delayed flights, with only 7.8% of flights being delayed.
+
+## Summary
+
+Comparing flight performance city-by-city versus overall reveals that certain cities experience more delays. AM WEST performs well overall but has a high delay rate in San Francisco and a low rate in Phoenix. 
